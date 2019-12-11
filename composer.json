@@ -1,13 +1,15 @@
 {
     "name": "city-of-bloomington/mds",
+    "descsription": "A PHP library for ETL from MDS providers",
+    "license": "GPL-3.0-or-later",
 
     "require": {
         "php": ">=7.2",
-        "psr/http-message":  "@stable"
+        "psr/http-message":  "@stable",
+        "guzzlehttp/guzzle": "@stable"
     },
     "require-dev": {
-        "phpunit/phpunit":   "@stable",
-        "guzzlehttp/guzzle": "@stable"
+        "phpunit/phpunit":   "@stable"
     },
     "autoload": {
         "psr-4": {
