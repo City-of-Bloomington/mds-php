@@ -52,12 +52,14 @@ class Extractor
     /**
      * Return status change data from the MDS provider
      */
-    public function status_changes(\DateTime $hour)
+    public function status_changes(\DateTime $start, \DateTime $end, string $outputDirectory)
     {
-        $client   = new \GuzzleHttp\Client();
-        $request  = new Psr7\Request('GET',
-                                     $this->endpoint.'/status_changes?end_time='.self::end_time($hour),
-                                     $this->headers());
+        $params = http_build_query([
+            'start_time' => $start->format('U'),
+              'end_time' =>   $end->format('U')
+        ], '', '&');
+        $url    = "{$this->endpoint}/status_changes?$params";
+        $this->downloadData($url, $outputDirectory);
     }
 
     private function downloadData(string $url, string $dir)
