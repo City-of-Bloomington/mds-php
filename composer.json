@@ -1,0 +1,22 @@
+{
+    "name": "city-of-bloomington/mds",
+
+    "require": {
+        "php": ">=7.2",
+        "psr/http-message":  "@stable"
+    },
+    "require-dev": {
+        "phpunit/phpunit":   "@stable",
+        "guzzlehttp/guzzle": "@stable"
+    },
+    "autoload": {
+        "psr-4": {
+            "COB\\Mds\\": "src/Mds"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Test\\": "src/Test"
+        }
+    }
+}
