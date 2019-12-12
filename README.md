@@ -8,23 +8,29 @@
 <?php
 declare (strict_types=1);
 use COB\Mds\Extractor;
+use COB\Mds\Loader;
+use COB\Mds\PostgresRepository;
 
 include './vendor/autoload.php';
+$config = include './config.php';
 
-$token = 'ASDKLJASKLDJASLKDJ';
-$client = new Extractor([
-    'provider'    => 'Bird',
-    'token'       => $token,
-    'api_version' => '3.0.0',
-    'endpoint'    => 'https://mds.bird.co'
-]);
+$db     = $config['database'];
+$pdo    = new \PDO("$db[driver]:dbname=$db[dbname];host=$db[host]", $db['username'], $db['password']);
+$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+$pdo->exec("set search_path=$db[schema]");
 
+$repo    = new PostgresRepository($pdo);
+$extract = new Extractor($config['providers']['Bird']);
+$load    = new Loader($repo);
 
-$day   = new \DateInterval('P1D');
-$start = new \DateTime('2019-11-21');
-$end   = clone($start);
-$end   = $end->add($day);
+$day     = new \DateInterval('P1D');
+$start   = new \DateTime('2019-11-21');
+$end     = clone($start);
+$end     = $end->add($day);
 
-$client->trips         ($start, $end, __DIR__.'/data/trips' );
-$client->status_changes($start, $end, __DIR__.'/data/status');
+$extract->trips         ($start, $end, __DIR__.'/data/trips' );
+$extract->status_changes($start, $end, __DIR__.'/data/status');
+
+$load->trips         (__DIR__.'/data/trips');
+$load->status_changes(__DIR__.'/data/status');
 ```
