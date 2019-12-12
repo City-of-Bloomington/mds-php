@@ -46,7 +46,7 @@ class Extractor
               'end_time' =>   $end->format('U')
         ], '', '&');
         $url    = "{$this->endpoint}/trips?$params";
-        $this->downloadData($url, $outputDirectory);
+        $this->downloadData($url, $outputDirectory, 'trips');
     }
 
     /**
@@ -59,32 +59,32 @@ class Extractor
               'end_time' =>   $end->format('U')
         ], '', '&');
         $url    = "{$this->endpoint}/status_changes?$params";
-        $this->downloadData($url, $outputDirectory);
+        $this->downloadData($url, $outputDirectory, 'status_changes');
     }
 
-    private function downloadData(string $url, string $dir)
+    private function downloadData(string $url, string $dir, string $type)
     {
-        $json['links']['next'] = $url;
-
-        while (!empty($json['links']['next'])) {
-            echo $json['links']['next']."\n";
-
-            $out   = $this->query($json['links']['next']);
+        while ($url) {
+            $out   = $this->query($url);
             $json  = json_decode($out, true);
             if ($json) {
-                self::saveUrlResponseToFile($json['links']['next'], $out, $dir);
+                $datetime = self::extractStartTimeFromQuery($url);
+                echo $datetime->format('c')." $url\n";
+
+                if ($json['data'][$type]) {
+                    self::saveUrlResponseToFile($datetime, $out, $dir);
+                }
+                $url = !empty($json['links']['next']) ? $json['links']['next'] : null;
+            }
+            else {
+                $url = null;
             }
         }
     }
 
-    private static function saveUrlResponseToFile(string $url, string $response, string $dir)
+    private static function saveUrlResponseToFile(\DateTime $datetime, string $response, string $dir)
     {
-        $u      = parse_url($url);
-        $params = [];
-        parse_str($u['query'], $params);
-        $date   = new \DateTime();
-        $date->setTimestamp((int)$params['start_time']);
-        $start  = $date->format('c');
+        $start  = $datetime->format('c');
         $file   = "$dir/$start.json";
         file_put_contents($file, $response);
     }
@@ -105,5 +105,15 @@ class Extractor
             'Authorization' => "{$this->provider} {$this->token}",
             'Content-Type'  => 'application/json'
         ];
+    }
+
+    private static function extractStartTimeFromQuery(string $url): \DateTime
+    {
+        $u      = parse_url($url);
+        $params = [];
+        parse_str($u['query'], $params);
+        $date   = new \DateTime();
+        $date->setTimestamp((int)$params['start_time']);
+        return $date;
     }
 }
