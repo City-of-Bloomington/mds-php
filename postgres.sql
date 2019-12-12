@@ -54,6 +54,5 @@ create table status_changes (
     battery_pct              real,
     associated_trip          uuid,
     associated_ticket        varchar(32),
-    primary key (device_id, event_time),
-    foreign key (associated_trip) references trips(trip_id)
+    primary key (device_id, event_time)
 );
