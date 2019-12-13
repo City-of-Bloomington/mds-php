@@ -11,7 +11,8 @@ use GuzzleHttp\Psr7;
 
 class Extractor
 {
-    const HOUR_FORMAT = 'Y-m-d\TH';
+    #const HOUR_FORMAT = 'Y-m-d\TH';
+    const HOUR_FORMAT = 'U';
 
     private $provider;
     private $token;
@@ -39,11 +40,10 @@ class Extractor
      *
      * @see https://github.com/openmobilityfoundation/mobility-data-specification/tree/dev/provider#trips
      */
-    public function trips(\DateTime $start, \DateTime $end, string $outputDirectory)
+    public function trips(\DateTime $end, string $outputDirectory)
     {
         $params = http_build_query([
-            'start_time' => $start->format('U'),
-              'end_time' =>   $end->format('U')
+            'end_time' => $end->format(self::HOUR_FORMAT)
         ], '', '&');
         $url    = "{$this->endpoint}/trips?$params";
         $this->downloadData($url, $outputDirectory, 'trips');
@@ -52,11 +52,10 @@ class Extractor
     /**
      * Return status change data from the MDS provider
      */
-    public function status_changes(\DateTime $start, \DateTime $end, string $outputDirectory)
+    public function status_changes(\DateTime $end, string $outputDirectory)
     {
         $params = http_build_query([
-            'start_time' => $start->format('U'),
-              'end_time' =>   $end->format('U')
+            'end_time' => $end->format(self::HOUR_FORMAT)
         ], '', '&');
         $url    = "{$this->endpoint}/status_changes?$params";
         $this->downloadData($url, $outputDirectory, 'status_changes');
@@ -68,11 +67,13 @@ class Extractor
             $out   = $this->query($url);
             $json  = json_decode($out, true);
             if ($json) {
-                $datetime = self::extractStartTimeFromQuery($url);
+                $datetime = self::extractTimeFromQuery($url);
                 echo $datetime->format('c')." $url\n";
 
-                if ($json['data'][$type]) {
-                    self::saveUrlResponseToFile($datetime, $out, $dir);
+                self::saveUrlResponseToFile($datetime, $out, $dir);
+                if (!empty($json['links']['next'])) {
+                    print_r($json['links']);
+                    exit();
                 }
                 $url = !empty($json['links']['next']) ? $json['links']['next'] : null;
             }
@@ -101,19 +102,18 @@ class Extractor
     private function headers(): array
     {
         return [
-            'APP-Version'   => $this->api_version,
             'Authorization' => "{$this->provider} {$this->token}",
-            'Content-Type'  => 'application/json'
+            'Content-Type'  => 'application/vnd.mds.provider+json;version=0.3',
+            'Accept'        => 'application/vnd.mds.provider+json;version=0.3'
         ];
     }
 
-    private static function extractStartTimeFromQuery(string $url): \DateTime
+    private static function extractTimeFromQuery(string $url): \DateTime
     {
         $u      = parse_url($url);
         $params = [];
         parse_str($u['query'], $params);
-        $date   = new \DateTime();
-        $date->setTimestamp((int)$params['start_time']);
+        $date = \DateTime::createFromFormat(self::HOUR_FORMAT, $params['end_time']);
         return $date;
     }
 }

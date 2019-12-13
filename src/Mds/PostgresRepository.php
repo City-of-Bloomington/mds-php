@@ -26,16 +26,16 @@ class PostgresRepository implements RepositoryInterface
 
         $sql    = "insert into trips ($cols) values($binds)
                    on conflict (trip_id) do nothing";
+
+        $trip_id = $params[':trip_id'];
+        $start   = $params[':start_time'];
+        echo "Inserting trip_id: $trip_id start_time: $start\n";
         $query  = $this->pdo->prepare($sql);
         $query->execute($params);
     }
 
     public function ingestStatusChange(array $status)
     {
-        if (!empty($status['associated_trips']) && empty($status['associated_trip'])) {
-            $status['associated_trip'] = $status['associated_trips'][0];
-        }
-
         $params = self::boundParametersForStatus($status);
         $cols   = implode(',', self::$STATUS_COLUMNS);
         $binds  = implode(',', array_keys($params));
@@ -66,7 +66,7 @@ class PostgresRepository implements RepositoryInterface
                     case 'start_time':
                     case 'end_time':
                     case 'publication_time':
-                        $params[":$f"] = date('c', (int)$trip[$f]);
+                        $params[":$f"] = date('c', (int)($trip[$f]/1000));
                     break;
 
                     default:
@@ -93,7 +93,7 @@ class PostgresRepository implements RepositoryInterface
                 switch ($f) {
                     case 'event_time':
                     case 'publication_time':
-                        $params[":$f"] = date('c', (int)$status[$f]);
+                        $params[":$f"] = date('c', (int)($status[$f]/1000));
                     break;
 
                     case 'event_location':
