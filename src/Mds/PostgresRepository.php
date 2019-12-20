@@ -29,7 +29,6 @@ class PostgresRepository implements RepositoryInterface
 
         $trip_id = $params[':trip_id'];
         $start   = $params[':start_time'];
-        echo "Inserting trip_id: $trip_id start_time: $start\n";
         $query  = $this->pdo->prepare($sql);
         $query->execute($params);
     }
@@ -45,6 +44,30 @@ class PostgresRepository implements RepositoryInterface
         $query->execute($params);
     }
 
+    /**
+     * Creates a unix timestamp from various timestamp representations
+     *
+     * MDS providers are inconsistent in formatting timestamps; even within
+     * a single response.  Timestamps are represented, variously as:
+     * - int     seconds                  1575982554
+     * - int     milliseconds             1575982554000
+     * - float   milliseconds             1575982554.000
+     * - string  scientific notation      1.575982554E9
+     *
+     * @return int Unix timestamp in seconds
+     */
+    public static function parseTimestamp($timestamp): int
+    {
+        $timestamp = (string)$timestamp;
+        if     (preg_match('/^\d{10}$/',     $timestamp)) { return (int)$timestamp;        }
+        elseif (preg_match('/^\d{13}$/',     $timestamp)) { return (int)($timestamp/1000); }
+        elseif (preg_match('/^\d{10}\.\d+/', $timestamp)) { return (int)$timestamp;        }
+        elseif (preg_match('/\d\.\d+E\d+/',  $timestamp)) { return (int)$timestamp;        }
+        else {
+            throw new \Exception('invalidTimestamp');
+        }
+    }
+
     private static $TRIP_COLUMNS = [
         'provider_id', 'provider_name', 'device_id', 'vehicle_id', 'vehicle_type', 'propulsion_type',
         'trip_id', 'trip_duration', 'trip_distance', 'route', 'accuracy',
@@ -56,7 +79,7 @@ class PostgresRepository implements RepositoryInterface
     {
         $params = [];
         foreach (self::$TRIP_COLUMNS as $f) {
-            if (!empty($trip[$f])) {
+            if (isset($trip[$f])) {
                 switch ($f) {
                     case 'route':
                     case 'propulsion_type':
@@ -66,7 +89,7 @@ class PostgresRepository implements RepositoryInterface
                     case 'start_time':
                     case 'end_time':
                     case 'publication_time':
-                        $params[":$f"] = date('c', (int)($trip[$f]/1000));
+                        $params[":$f"] = date('c', self::parseTimestamp($trip[$f]));
                     break;
 
                     default:
@@ -88,12 +111,20 @@ class PostgresRepository implements RepositoryInterface
     private static function boundParametersForStatus(array $status): array
     {
         $params = [];
+
+        // Version 0.2 provided an array of tickets, instead of just one.
+        // However, in practice, there was only ever one ticket associated with
+        // any given status change.
+        if (!empty($status['associated_tickets'])) {
+            $params[':associated_ticket'] = $status['associated_tickets'][0];
+        }
+
         foreach (self::$STATUS_COLUMNS as $f) {
             if (!empty($status[$f])) {
                 switch ($f) {
                     case 'event_time':
                     case 'publication_time':
-                        $params[":$f"] = date('c', (int)($status[$f]/1000));
+                        $params[":$f"] = date('c', self::parseTimestamp($status[$f]));
                     break;
 
                     case 'event_location':

@@ -11,9 +11,6 @@ use GuzzleHttp\Psr7;
 
 class Extractor
 {
-    #const HOUR_FORMAT = 'Y-m-d\TH';
-    const HOUR_FORMAT = 'U';
-
     private $provider;
     private $token;
     private $api_version;
@@ -40,10 +37,11 @@ class Extractor
      *
      * @see https://github.com/openmobilityfoundation/mobility-data-specification/tree/dev/provider#trips
      */
-    public function trips(\DateTime $end, string $outputDirectory)
+    public function trips(\DateTime $start, \DateTime $end, string $outputDirectory)
     {
         $params = http_build_query([
-            'end_time' => $end->format(self::HOUR_FORMAT)
+            'start_time' => $start->format('U'),
+              'end_time' => $end  ->format('U')
         ], '', '&');
         $url    = "{$this->endpoint}/trips?$params";
         $this->downloadData($url, $outputDirectory, 'trips');
@@ -52,10 +50,11 @@ class Extractor
     /**
      * Return status change data from the MDS provider
      */
-    public function status_changes(\DateTime $end, string $outputDirectory)
+    public function status_changes(\DateTime $start, \DateTime $end, string $outputDirectory)
     {
         $params = http_build_query([
-            'end_time' => $end->format(self::HOUR_FORMAT)
+            'start_time' => $start->format('U'),
+              'end_time' => $end  ->format('U')
         ], '', '&');
         $url    = "{$this->endpoint}/status_changes?$params";
         $this->downloadData($url, $outputDirectory, 'status_changes');
@@ -70,11 +69,10 @@ class Extractor
                 $datetime = self::extractTimeFromQuery($url);
                 echo $datetime->format('c')." $url\n";
 
-                self::saveUrlResponseToFile($datetime, $out, $dir);
-                if (!empty($json['links']['next'])) {
-                    print_r($json['links']);
-                    exit();
+                if (!empty($json['data'][$type])) {
+                    self::saveUrlResponseToFile($datetime, $out, $dir);
                 }
+
                 $url = !empty($json['links']['next']) ? $json['links']['next'] : null;
             }
             else {
@@ -85,8 +83,10 @@ class Extractor
 
     private static function saveUrlResponseToFile(\DateTime $datetime, string $response, string $dir)
     {
-        $start  = $datetime->format('c');
-        $file   = "$dir/$start.json";
+        $start     = $datetime->format('c');
+        $existing  = glob("$dir/$start*.json");
+        $count     = count($existing);
+        $file      = "$dir/$start-$count.json";
         file_put_contents($file, $response);
     }
 
@@ -102,9 +102,9 @@ class Extractor
     private function headers(): array
     {
         return [
-            'Authorization' => "{$this->provider} {$this->token}",
-            'Content-Type'  => 'application/vnd.mds.provider+json;version=0.3',
-            'Accept'        => 'application/vnd.mds.provider+json;version=0.3'
+            'Authorization' => "Bearer {$this->token}",
+            'Content-Type'  => 'application/vnd.mds.provider+json;version=0.2',
+            'Accept'        => 'application/vnd.mds.provider+json;version=0.2'
         ];
     }
 
@@ -113,7 +113,17 @@ class Extractor
         $u      = parse_url($url);
         $params = [];
         parse_str($u['query'], $params);
-        $date = \DateTime::createFromFormat(self::HOUR_FORMAT, $params['end_time']);
+        $date = new \DateTime();
+        switch (strlen($params['start_time'])) {
+            case 13:
+                $date->setTimestamp((int)($params['start_time']/1000));
+            break;
+            case 10:
+                $date->setTimestamp((int)$params['start_time']);
+            break;
+            default:
+                throw new \Exception('invalidTimestamp');
+        }
         return $date;
     }
 }
