@@ -38,6 +38,7 @@ create table trips (
     actual_cost              int,
     currency                 varchar(3)
 );
+create index on trips(start_time);
 
 create table status_changes (
     provider_id              uuid               not null,
@@ -56,3 +57,4 @@ create table status_changes (
     associated_ticket        varchar(32),
     primary key (device_id, event_time)
 );
+create index on status_changes(event_time);
