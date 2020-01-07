@@ -18,7 +18,7 @@ class Extractor
 
     public function __construct(array $config)
     {
-        $this->provider    = $config['provider'   ];
+        $this->provider    = $config['name'       ];
         $this->token       = $config['token'      ];
         $this->api_version = $config['api_version'];
         $this->endpoint    = $config['endpoint'   ];

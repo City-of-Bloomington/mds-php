@@ -2,6 +2,23 @@
 
 [The Mobility Data Specification](https://github.com/openmobilityfoundation/mobility-data-specification) (MDS), a project of the [Open Mobility Foundation](http://www.openmobilityfoundation.org) (OMF), is a set of Application Programming Interfaces (APIs) focused on dockless e-scooters, bicycles and carshare.
 
+## Install using [composer](https://getcomposer.org/)
+```json
+{
+    "repositories": [{
+        "type": "vcs",
+        "url": "https://github.com/City-of-Bloomington/blossom-lib"
+    }],
+    "require": {
+        "city-of-bloomington/mds": "dev-master"
+    }
+}
+```
+
+```
+composer update
+```
+
 ## Usage
 
 ```php
