@@ -16,12 +16,23 @@ class Extractor
     private $api_version;
     private $endpoint;
 
-    public function __construct(array $config)
+    private $log;
+
+    /**
+     * @param array    $config
+     * @param resource $log     File handle to send log messages
+     */
+    public function __construct(array $config, $log=null)
     {
         $this->provider    = $config['name'       ];
         $this->token       = $config['token'      ];
         $this->api_version = $config['api_version'];
         $this->endpoint    = $config['endpoint'   ];
+
+        if ($log) {
+            if (is_resource($log)) { $this->log = $log; }
+            else { throw new \Exception('invalidLogFileHandle'); }
+        }
 
         if (!$this->provider   ) { throw new \Exception('missingProvider'  ); }
         if (!$this->token      ) { throw new \Exception('missingToken'     ); }
@@ -67,7 +78,9 @@ class Extractor
             $json  = json_decode($out, true);
             if ($json) {
                 $datetime = self::extractTimeFromQuery($url);
-                echo $datetime->format('c')." $url\n";
+                if ($this->log) {
+                    fwrite($this->log, $datetime->format('c')." $url\n");
+                }
 
                 if (!empty($json['data'][$type])) {
                     self::saveUrlResponseToFile($datetime, $out, $dir);
