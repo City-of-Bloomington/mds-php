@@ -13,7 +13,8 @@
     },
     "autoload": {
         "psr-4": {
-            "COB\\Mds\\": "src/Mds"
+            "COB\\GBFS\\": "src/GBFS",
+            "COB\\Mds\\":  "src/Mds"
         }
     },
     "autoload-dev": {
