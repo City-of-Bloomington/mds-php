@@ -20,8 +20,21 @@ class Loader
     {
         $in   = file_get_contents($file);
         $json = json_decode($in, true);
-        $date = \DateTime::createFromFormat('U', (string)$json['last_updated']);
+        $df   = self::dateFieldForProvider($provider);
+        $date = \DateTime::createFromFormat('U', (string)$json[$df]);
 
         $this->repo->ingestFreeBikeStatus($json['data']['bikes'], $date, $provider);
+    }
+
+    private static function dateFieldForProvider(string $provider): string
+    {
+        switch ($provider) {
+            case 'VeoRide':
+                return 'lastUpdated';
+            break;
+
+            default:
+                return 'last_updated';
+        }
     }
 }

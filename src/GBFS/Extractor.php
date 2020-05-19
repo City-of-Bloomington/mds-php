@@ -24,7 +24,15 @@ class Extractor
 
     public function free_bike_status(string $outputFile)
     {
-        $url = "{$this->endpoint}/free_bike_status.json";
+        switch ($this->provider) {
+            case 'VeoRide':
+                $url = "{$this->endpoint}/free_bike_status";
+            break;
+
+            default:
+                $url = "{$this->endpoint}/free_bike_status.json";
+        }
+
         $this->downloadData($url, $outputFile);
     }
 
