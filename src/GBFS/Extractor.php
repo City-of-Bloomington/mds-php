@@ -22,25 +22,19 @@ class Extractor
         $this->endpoint    = $config['endpoint'];
     }
 
-    public function free_bike_status(string $outputDirectory)
+    public function free_bike_status(string $outputFile)
     {
         $url = "{$this->endpoint}/free_bike_status.json";
-        $this->downloadData($url, $outputDirectory);
+        $this->downloadData($url, $outputFile);
     }
 
-    private function downloadData(string $url, string $dir)
+    private function downloadData(string $url, string $outputFile)
     {
         $response = $this->query($url);
         $json     = json_decode($response, true);
         if ($json) {
-            self::saveResponseToFile(json_encode($json, JSON_PRETTY_PRINT), $dir);
+            file_put_contents($outputFile, json_encode($json, JSON_PRETTY_PRINT));
         }
-    }
-
-    private static function saveResponseToFile(string $response, string $dir)
-    {
-        $file = "$dir/free_bike_status.json";
-        file_put_contents($file, $response);
     }
 
     private function query($url)
