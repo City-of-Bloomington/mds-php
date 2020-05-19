@@ -7,7 +7,7 @@
 {
     "repositories": [{
         "type": "vcs",
-        "url": "https://github.com/City-of-Bloomington/blossom-lib"
+        "url": "https://github.com/City-of-Bloomington/mds-php"
     }],
     "require": {
         "city-of-bloomington/mds": "dev-master"
