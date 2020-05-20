@@ -7,6 +7,7 @@ declare (strict_types=1);
 
 namespace COB\GBFS;
 
+use COB\Constants;
 use GuzzleHttp\Psr7;
 
 class Extractor
@@ -25,7 +26,7 @@ class Extractor
     public function free_bike_status(string $outputFile)
     {
         switch ($this->provider) {
-            case 'VeoRide':
+            case Constants::PROVIDER_VEORIDE:
                 $url = "{$this->endpoint}/free_bike_status";
             break;
 

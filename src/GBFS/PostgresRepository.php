@@ -6,6 +6,8 @@
 declare (strict_types=1);
 namespace COB\GBFS;
 
+use COB\Constants;
+
 class PostgresRepository implements RepositoryInterface
 {
     private $pdo;
@@ -15,7 +17,13 @@ class PostgresRepository implements RepositoryInterface
         $this->pdo = $pdo;
     }
 
-    public function ingestFreeBikeStatus(array $data, \DateTime $last_updated, string $provider)
+    /**
+     * @see https://github.com/NABSA/gbfs/blob/v2.0-RC/gbfs.md#free_bike_statusjson
+     * @param array     $bike          Data for a single bike record in the free_bike_status response
+     * @param \DateTime $last_updated  The last_updated value from the free_bike_status response
+     * @param string    $provider      Name of the provider
+     */
+    public function ingestFreeBikeStatus(array $bikes, \DateTime $last_updated, string $provider)
     {
         $cols   = implode(',', self::$GBFS_COLUMNS);
         $binds  = implode(',', self::paramNames(self::$GBFS_COLUMNS));
@@ -23,8 +31,8 @@ class PostgresRepository implements RepositoryInterface
         $sql    = "insert into free_bike_status ($cols) values($binds)
                    on conflict(provider_name, last_updated, bike_id) do nothing";
         $insert = $this->pdo->prepare($sql);
-        foreach ($data as $row) {
-            $insert->execute(self::boundParams($row, $last_updated, $provider));
+        foreach ($bikes as $bike) {
+            $insert->execute(self::boundParams($bike, $last_updated, $provider));
         }
     }
 
@@ -45,14 +53,53 @@ class PostgresRepository implements RepositoryInterface
 
     /**
      * Binds data to named parameters
+     *
+     * @see https://github.com/NABSA/gbfs/blob/v2.0-RC/gbfs.md#free_bike_statusjson
+     * @param array     $bike          Data for a single bike record in the free_bike_status response
+     * @param \DateTime $last_updated  The last_updated value from the free_bike_status response
+     * @param string    $provider      Name of the provider
      */
-    private static function boundParams(array $row, \DateTime $last_updated, string $provider): array
+    private static function boundParams(array $bike, \DateTime $last_updated, string $provider): array
     {
         $params = [
             ':provider_name' => $provider,
             ':last_updated'  => $last_updated->format('c')
         ];
-        foreach ($row as $k=>$v) { $params[":$k"] = $v; }
+        foreach (self::providerFieldMap($provider) as $jsonField => $dbColumn) {
+            $params[":$dbColumn"] = $bike[$jsonField];
+        }
         return $params;
+    }
+
+    /**
+     * Returns an array mapping the json field names to database column names
+     * @param string $provider Name of the provider
+     */
+    private static function providerFieldMap(string $provider): array
+    {
+        switch ($provider) {
+            case Constants::PROVIDER_VEORIDE:
+                // JSON fieldname => Database column name
+                return [
+                    'bikeId'      => 'bike_id',
+                    'lat'         => 'lat',
+                    'long'        => 'long',
+                    'isReserved'  => 'is_reserved',
+                    'isDisabled'  => 'is_disabled',
+                    'vehicleType' => 'vehicle_type'
+                ];
+            break;
+
+            default:
+                // JSON fieldname => Database column name
+                return [
+                    'bike_id'     => 'bike_id',
+                    'lat'         => 'lat',
+                    'long'        => 'long',
+                    'is_reserved' => 'is_reserved',
+                    'is_disabled' => 'is_disabled',
+                    'vehicle_type'=> 'vehicle_type'
+                ];
+        }
     }
 }
