@@ -83,7 +83,7 @@ class PostgresRepository implements RepositoryInterface
                 return [
                     'bikeId'      => 'bike_id',
                     'lat'         => 'lat',
-                    'long'        => 'long',
+                    'lon'         => 'lon',
                     'isReserved'  => 'is_reserved',
                     'isDisabled'  => 'is_disabled',
                     'vehicleType' => 'vehicle_type'
