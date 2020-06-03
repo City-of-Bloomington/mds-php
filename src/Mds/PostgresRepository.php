@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright 2019 City of Bloomington, Indiana
+ * @copyright 2019-2020 City of Bloomington, Indiana
  * @license https://www.gnu.org/licenses/gpl-3.0.txt GNU/GPL, see LICENSE
  */
 declare (strict_types=1);
@@ -12,7 +12,6 @@ class PostgresRepository implements RepositoryInterface
     const DATETIME_FORMAT = 'Y-m-d ';
     private $pdo;
 
-
     public function __construct(\PDO $pdo)
     {
         $this->pdo = $pdo;
@@ -20,17 +19,16 @@ class PostgresRepository implements RepositoryInterface
 
     public function ingestTrip(array $trip)
     {
-        $params = self::boundParametersForTrip($trip);
-        $cols   = implode(',', self::$TRIP_COLUMNS);
-        $binds  = implode(',', array_keys($params));
+        $params  = self::boundParametersForTrip($trip);
+        $cols    = implode(',', self::$TRIP_COLUMNS);
+        $binds   = implode(',', array_keys($params));
 
-        $sql    = "insert into trips ($cols) values($binds)
-                   on conflict (trip_id) do nothing";
+        $sql     = "insert into trips ($cols) values($binds)
+                    on conflict (trip_id) do nothing";
 
         $trip_id = $params[':trip_id'];
         $start   = $params[':start_time'];
-        $query  = $this->pdo->prepare($sql);
-        $query->execute($params);
+        $query   = $this->pdo->prepare($sql);
     }
 
     public function ingestStatusChange(array $status)
@@ -72,7 +70,7 @@ class PostgresRepository implements RepositoryInterface
         'provider_id', 'provider_name', 'device_id', 'vehicle_id', 'vehicle_type', 'propulsion_type',
         'trip_id', 'trip_duration', 'trip_distance', 'route', 'accuracy',
         'start_time', 'end_time', 'publication_time', 'parking_verification_url',
-        'standard_cost', 'actual_cost', 'currency'
+        'standard_cost', 'actual_cost'
     ];
 
     private static function boundParametersForTrip(array $trip): array

@@ -20,21 +20,21 @@ class Loader
     {
         $in   = file_get_contents($file);
         $json = json_decode($in, true);
-        $df   = self::dateFieldForProvider($provider);
-        $date = \DateTime::createFromFormat('U', (string)$json[$df]);
+        $time = (int)$json['last_updated'];
+        $date = new \DateTime();
+        switch (strlen((string)$time)) {
+            case 13:
+                $date->setTimestamp((int)round($time/1000));
+            break;
 
-        $this->repo->ingestFreeBikeStatus($json['data']['bikes'], $date, $provider);
-    }
-
-    private static function dateFieldForProvider(string $provider): string
-    {
-        switch ($provider) {
-            case 'VeoRide':
-                return 'lastUpdated';
+            case 10:
+                $date->setTimestamp($time);
             break;
 
             default:
-                return 'last_updated';
+                throw new \Exception('invalidTimestamp');
         }
+
+        $this->repo->ingestFreeBikeStatus($json['data']['bikes'], $date, $provider);
     }
 }

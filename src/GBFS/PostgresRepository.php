@@ -37,19 +37,9 @@ class PostgresRepository implements RepositoryInterface
     }
 
     private static $GBFS_COLUMNS = [
-        'provider_name', 'last_updated', 'bike_id',
-        'lat', 'lon', 'is_reserved', 'is_disabled', 'vehicle_type'
+        'provider_name', 'last_updated',
+        'bike_id', 'lat', 'lon', 'is_reserved', 'is_disabled', 'vehicle_type'
     ];
-
-    /**
-     * Creates an array of named parameters for use in SQL queries
-     */
-    private static function paramNames(array $cols): array
-    {
-        $binds = [];
-        foreach ($cols as $c) { $binds[] = ":$c"; }
-        return $binds;
-    }
 
     /**
      * Binds data to named parameters
@@ -63,43 +53,25 @@ class PostgresRepository implements RepositoryInterface
     {
         $params = [
             ':provider_name' => $provider,
-            ':last_updated'  => $last_updated->format('c')
+            ':last_updated'  => $last_updated->format('c'),
+            ':bike_id'       => $bike['bike_id'     ],
+            ':lat'           => $bike['lat'         ],
+            ':lon'           => $bike['lon'         ],
+            ':is_reserved'   => $bike['is_reserved' ],
+            ':is_disabled'   => $bike['is_disabled' ],
+            ':vehicle_type'  => $bike['vehicle_type']
+
         ];
-        foreach (self::providerFieldMap($provider) as $jsonField => $dbColumn) {
-            $params[":$dbColumn"] = $bike[$jsonField];
-        }
         return $params;
     }
 
     /**
-     * Returns an array mapping the json field names to database column names
-     * @param string $provider Name of the provider
+     * Creates an array of named parameters for use in SQL queries
      */
-    private static function providerFieldMap(string $provider): array
+    private static function paramNames(array $cols): array
     {
-        switch ($provider) {
-            case Constants::PROVIDER_VEORIDE:
-                // JSON fieldname => Database column name
-                return [
-                    'bikeId'      => 'bike_id',
-                    'lat'         => 'lat',
-                    'lon'         => 'lon',
-                    'isReserved'  => 'is_reserved',
-                    'isDisabled'  => 'is_disabled',
-                    'vehicleType' => 'vehicle_type'
-                ];
-            break;
-
-            default:
-                // JSON fieldname => Database column name
-                return [
-                    'bike_id'     => 'bike_id',
-                    'lat'         => 'lat',
-                    'long'        => 'long',
-                    'is_reserved' => 'is_reserved',
-                    'is_disabled' => 'is_disabled',
-                    'vehicle_type'=> 'vehicle_type'
-                ];
-        }
+        $binds = [];
+        foreach ($cols as $c) { $binds[] = ":$c"; }
+        return $binds;
     }
 }

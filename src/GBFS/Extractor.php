@@ -16,11 +16,11 @@ class Extractor
     private $token;
     private $endpoint;
 
-    public function __construct(array $config)
+    public function __construct(string $provider, string $endpoint, string $token)
     {
-        $this->provider    = $config['provider'];
-        $this->token       = $config['token'   ];
-        $this->endpoint    = $config['endpoint'];
+        $this->provider    = $provider;
+        $this->token       = $token;
+        $this->endpoint    = $endpoint;
     }
 
     public function free_bike_status(string $outputFile)
