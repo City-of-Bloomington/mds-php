@@ -29,6 +29,7 @@ class PostgresRepository implements RepositoryInterface
         $trip_id = $params[':trip_id'];
         $start   = $params[':start_time'];
         $query   = $this->pdo->prepare($sql);
+        $query->execute($params);
     }
 
     public function ingestStatusChange(array $status)

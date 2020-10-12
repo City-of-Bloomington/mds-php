@@ -37,7 +37,6 @@ class Extractor
             'max_end_time' => $end  ->format('U').'000'
         ], '', '&');
         $url    = "{$this->endpoint}/trips?$params";
-        echo "$url\n";
         $this->downloadData($url, $outputDirectory, 'trips');
     }
 
