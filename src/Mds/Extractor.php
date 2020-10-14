@@ -37,7 +37,7 @@ class Extractor
             'max_end_time' => $end  ->format('U').'000'
         ], '', '&');
         $url    = "{$this->endpoint}/trips?$params";
-        $this->downloadData($url, $outputDirectory, 'trips');
+        $this->downloadData($url, $outputDirectory, 'trips', $start);
     }
 
     /**
@@ -50,20 +50,18 @@ class Extractor
               'end_time' => $end  ->format('U').'000'
         ], '', '&');
         $url    = "{$this->endpoint}/status_changes?$params";
-        $this->downloadData($url, $outputDirectory, 'status_changes');
+        $this->downloadData($url, $outputDirectory, 'status_changes', $start);
     }
 
-    private function downloadData(string $url, string $dir, string $type)
+    private function downloadData(string $url, string $dir, string $type, \DateTime $datetime)
     {
         while ($url) {
             $out   = $this->query($url);
             $json  = json_decode($out, true);
             if ($json) {
-                $datetime = self::extractTimeFromQuery($url);
-
-                #if (!empty($json['data'][$type])) {
+                if (!empty($json['data'][$type])) {
                     self::saveUrlResponseToFile($datetime, $out, $dir);
-                #}
+                }
 
                 $url = !empty($json['links']['next']) ? $json['links']['next'] : null;
             }
@@ -98,27 +96,5 @@ class Extractor
             'Content-Type'  => 'application/vnd.mds.provider+json;version=0.3',
             'Accept'        => 'application/vnd.mds.provider+json;version=0.3'
         ];
-    }
-
-    private static function extractTimeFromQuery(string $url): \DateTime
-    {
-        $u      = parse_url($url);
-        $params = [];
-        parse_str($u['query'], $params);
-        $time   = isset( $params['min_end_time'] )
-                  ? (int)$params['min_end_time']
-                  : (int)$params[    'end_time'];
-        $date = new \DateTime();
-        switch (strlen((string)$time)) {
-            case 13:
-                $date->setTimestamp((int)round($time/1000));
-            break;
-            case 10:
-                $date->setTimestamp($time);
-            break;
-            default:
-                throw new \Exception('invalidTimestamp');
-        }
-        return $date;
     }
 }
