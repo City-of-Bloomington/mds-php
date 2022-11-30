@@ -104,19 +104,12 @@ class PostgresRepository implements RepositoryInterface
 
     private static $STATUS_COLUMNS = [
         'provider_id', 'provider_name', 'device_id', 'vehicle_id', 'vehicle_type', 'propulsion_types',
-        'event_type', 'event_type_reason', 'event_time', 'publication_time',
-        'event_location', 'battery_pct', 'associated_trip', 'associated_ticket'
+        'vehicle_state', 'event_types', 'event_time', 'publication_time',
+        'event_location', 'battery_pct', 'trip_id', 'associated_ticket'
     ];
     private static function boundParametersForStatus(array $status): array
     {
         $params = [];
-
-        // Version 0.2 provided an array of tickets, instead of just one.
-        // However, in practice, there was only ever one ticket associated with
-        // any given status change.
-        if (!empty($status['associated_tickets'])) {
-            $params[':associated_ticket'] = $status['associated_tickets'][0];
-        }
 
         foreach (self::$STATUS_COLUMNS as $f) {
             if (!empty($status[$f])) {
@@ -126,6 +119,7 @@ class PostgresRepository implements RepositoryInterface
                         $params[":$f"] = date('c', self::parseTimestamp($status[$f]));
                     break;
 
+                    case 'event_types':
                     case 'event_location':
                     case 'propulsion_types':
                         $params[":$f"] = json_encode($status[$f]);

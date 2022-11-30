@@ -61,8 +61,8 @@ class Loader
             'device_id',
             'vehicle_id',
             'propulsion_types',
-            'event_type',
-            'event_type_reason',
+            'vehicle_state',
+            'event_types',
             'event_location'
         ];
         foreach ($required as $f) {
