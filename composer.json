@@ -4,7 +4,7 @@
     "license": "GPL-3.0-or-later",
 
     "require": {
-        "php": ">=7.2",
+        "php": ">=7.4",
         "psr/http-message":  "@stable",
         "guzzlehttp/guzzle": "@stable"
     },

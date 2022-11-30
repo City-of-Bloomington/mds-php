@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright 2019 City of Bloomington, Indiana
+ * @copyright 2019-2022 City of Bloomington, Indiana
  * @license https://www.gnu.org/licenses/gpl-3.0.txt GNU/GPL, see LICENSE
  */
 declare (strict_types=1);
@@ -60,7 +60,7 @@ class Loader
             'provider_name',
             'device_id',
             'vehicle_id',
-            'propulsion_type',
+            'propulsion_types',
             'event_type',
             'event_type_reason',
             'event_location'

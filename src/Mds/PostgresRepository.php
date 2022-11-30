@@ -1,6 +1,6 @@
 <?php
 /**
- * @copyright 2019-2020 City of Bloomington, Indiana
+ * @copyright 2019-2022 City of Bloomington, Indiana
  * @license https://www.gnu.org/licenses/gpl-3.0.txt GNU/GPL, see LICENSE
  */
 declare (strict_types=1);
@@ -68,7 +68,7 @@ class PostgresRepository implements RepositoryInterface
     }
 
     private static $TRIP_COLUMNS = [
-        'provider_id', 'provider_name', 'device_id', 'vehicle_id', 'vehicle_type', 'propulsion_type',
+        'provider_id', 'provider_name', 'device_id', 'vehicle_id', 'vehicle_type', 'propulsion_types',
         'trip_id', 'trip_duration', 'trip_distance', 'route', 'accuracy',
         'start_time', 'end_time', 'publication_time', 'parking_verification_url',
         'standard_cost', 'actual_cost'
@@ -81,7 +81,7 @@ class PostgresRepository implements RepositoryInterface
             if (isset($trip[$f])) {
                 switch ($f) {
                     case 'route':
-                    case 'propulsion_type':
+                    case 'propulsion_types':
                         $params[":$f"] = json_encode($trip[$f]);
                     break;
 
@@ -103,7 +103,7 @@ class PostgresRepository implements RepositoryInterface
     }
 
     private static $STATUS_COLUMNS = [
-        'provider_id', 'provider_name', 'device_id', 'vehicle_id', 'vehicle_type', 'propulsion_type',
+        'provider_id', 'provider_name', 'device_id', 'vehicle_id', 'vehicle_type', 'propulsion_types',
         'event_type', 'event_type_reason', 'event_time', 'publication_time',
         'event_location', 'battery_pct', 'associated_trip', 'associated_ticket'
     ];
@@ -127,7 +127,7 @@ class PostgresRepository implements RepositoryInterface
                     break;
 
                     case 'event_location':
-                    case 'propulsion_type':
+                    case 'propulsion_types':
                         $params[":$f"] = json_encode($status[$f]);
                     break;
 
